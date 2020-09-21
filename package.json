@@ -12,11 +12,13 @@
   "author": "Martin Petr",
   "license": "ISC",
   "dependencies": {
+    "@types/socket.io": "^2.1.11",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "helmet": "^3.23.3",
-    "mongoose": "^5.9.25"
+    "mongoose": "^5.9.25",
+    "socket.io": "^2.3.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.6",

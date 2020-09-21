@@ -3,6 +3,7 @@ import express from "express";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import helmet from "helmet";
+import socketIO from "socket.io";
 
 dotenv.config();
 
@@ -13,7 +14,7 @@ if (!process.env.PORT) {
 
 const PORT: number = parseInt(process.env.PORT as string, 10);
 
-const app = express();
+export const app = express();
 
 app.use(helmet());
 app.use(cors());
@@ -24,3 +25,9 @@ const server = app.listen(PORT, () => {
 });
 
 app.get("/", (req, res) => res.send("Hello world!"));
+
+const io = socketIO(server);
+
+io.on("connect", (socket) => {
+  console.log("connect");
+});
