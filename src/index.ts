@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import helmet from "helmet";
 import socketIO from "socket.io";
+import { v4 as uuidv4 } from "uuid";
 
 dotenv.config();
 
@@ -24,10 +25,25 @@ const server = app.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`);
 });
 
-app.get("/", (req, res) => res.send("Hello world!"));
+app.get("/", (req, res) =>
+  res.send({
+    version: "1.0.0",
+    message: "Realtime websocket server",
+  })
+);
 
 const io = socketIO(server);
 
 io.on("connect", (socket) => {
-  console.log("connect");
+  let roomID: string;
+  if (!socket.handshake.query.roomID) {
+    roomID = uuidv4();
+  } else {
+    roomID = socket.handshake.query.roomID;
+  }
+  socket.join(roomID);
+
+  socket.emit("initial", { roomID });
+
+  io.to(roomID).emit("test", `Hello room ${roomID}`);
 });
