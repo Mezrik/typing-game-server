@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import helmet from "helmet";
 import socketIO from "socket.io";
-import { v4 as uuidv4 } from "uuid";
+import Room from "./core/Room";
 
 dotenv.config();
 
@@ -21,7 +21,7 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
-const server = app.listen(PORT, () => {
+export const server = app.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`);
 });
 
@@ -32,18 +32,38 @@ app.get("/", (req, res) =>
   })
 );
 
-const io = socketIO(server);
+export const io = socketIO(server);
+
+const rooms: { [key: string]: Room } = {};
+const mappedRoomsToSockets: { [key: string]: Room } = {};
+
+const createRoom = (): Room => {
+  const room = new Room();
+  rooms[room.id] = room;
+
+  return room;
+};
 
 io.on("connect", (socket) => {
-  let roomID: string;
+  let room: Room;
   if (!socket.handshake.query.roomID) {
-    roomID = uuidv4();
+    room = createRoom();
+    socket.emit("room-created", room.id);
   } else {
-    roomID = socket.handshake.query.roomID;
+    room = rooms[socket.handshake.query.roomID];
+    if (!room) {
+      socket.emit("room-not-found");
+      return;
+    }
   }
-  socket.join(roomID);
 
-  socket.emit("initial", { roomID });
+  room.join(socket);
+  mappedRoomsToSockets[socket.id] = room;
+});
 
-  io.to(roomID).emit("test", `Hello room ${roomID}`);
+io.on("disconnect", (socket: SocketIO.Socket) => {
+  const room = mappedRoomsToSockets[socket.id];
+  const isEmpty = room.leave(socket.id);
+
+  if (isEmpty) delete rooms[room.id];
 });
