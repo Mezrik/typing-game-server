@@ -5,8 +5,8 @@
   "main": "src/index.ts",
   "sideEffects": false,
   "scripts": {
-    "start": "webpack --watch --config webpack.dev.ts",
-    "build": "webpack --config webpack.config.ts",
+    "start": "webpack --watch --env.mode=development",
+    "build": "webpack --env.mode=production",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Martin Petr",
@@ -36,6 +36,7 @@
     "typescript": "^3.9.7",
     "webpack": "^4.43.0",
     "webpack-cli": "^3.3.12",
+    "webpack-merge": "^5.1.4",
     "webpack-node-externals": "^2.5.0"
   }
 }
