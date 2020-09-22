@@ -35,7 +35,6 @@ app.get("/", (req, res) =>
 export const io = socketIO(server);
 
 const rooms: { [key: string]: Room } = {};
-const mappedRoomsToSockets: { [key: string]: Room } = {};
 
 const createRoom = (): Room => {
   const room = new Room();
@@ -48,6 +47,7 @@ io.on("connect", (socket) => {
   let room: Room;
   if (!socket.handshake.query.roomID) {
     room = createRoom();
+    console.log(`Room ${room.id} created.`);
     socket.emit("room-created", room.id);
   } else {
     room = rooms[socket.handshake.query.roomID];
@@ -58,12 +58,19 @@ io.on("connect", (socket) => {
   }
 
   room.join(socket);
-  mappedRoomsToSockets[socket.id] = room;
-});
+  if (room.playersCount == 2) io.to(room.id).emit("players-connected", room.id);
 
-io.on("disconnect", (socket: SocketIO.Socket) => {
-  const room = mappedRoomsToSockets[socket.id];
-  const isEmpty = room.leave(socket.id);
+  socket.on("disconnect", () => {
+    const isEmpty = room.leave(socket.id);
 
-  if (isEmpty) delete rooms[room.id];
+    if (isEmpty) {
+      delete rooms[room.id];
+      console.log(`Room ${room.id} deleted.`);
+    }
+  });
+
+  socket.on("new-score", (score: number) => {
+    room.updateScore(socket, score);
+    io.to(room.id).emit("score-change", room.scores);
+  });
 });
