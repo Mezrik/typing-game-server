@@ -8,6 +8,8 @@ import Room from "./core/Room";
 
 dotenv.config();
 
+const PLAYERS_COUNT = 2;
+
 if (!process.env.PORT) {
   console.error("Define a port for the server to run on.");
   process.exit(1);
@@ -58,7 +60,8 @@ io.on("connect", (socket) => {
   }
 
   room.join(socket);
-  if (room.playersCount == 2) io.to(room.id).emit("players-connected", room.id);
+  if (room.playersCount == PLAYERS_COUNT)
+    io.to(room.id).emit("players-connected", room.id);
 
   socket.on("disconnect", () => {
     const isEmpty = room.leave(socket.id);
